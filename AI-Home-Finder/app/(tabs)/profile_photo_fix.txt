@@ -1,0 +1,93 @@
+ADD TO ApartmentFormModal state (after line 45):
+  const [photos, setPhotos] = useState<string[]>(existing?.photos || []);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+
+ADD NEW FUNCTION (before handleSave):
+  const handleAddPhoto = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.7,
+      });
+      if (!result.canceled && result.assets[0]?.uri) {
+        setUploadingPhoto(true);
+        const uri = result.assets[0].uri;
+        setPhotos([...photos, uri]);
+        setUploadingPhoto(false);
+      }
+    } catch (err) {
+      Alert.alert("Error", "Failed to pick photo");
+    }
+  };
+
+IN handleSave, replace: photos: existing?.photos || [],
+WITH: photos: photos,
+
+ADD AFTER amenities grid (after line 140):
+
+          {/* Photos section */}
+          <View key="photos" style={styles.formField}>
+            <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Photos</Text>
+            <View style={styles.photoGrid}>
+              {photos.map((photo, idx) => (
+                <View key={idx} style={[styles.photoThumbnail, { backgroundColor: isDark ? colors.background : "#F6F8FC" }]}>
+                  <Image source={{ uri: photo }} style={styles.photoThumbnail} />
+                  <Pressable
+                    style={styles.removePhotoBtn}
+                    onPress={() => setPhotos(photos.filter((_, i) => i !== idx))}
+                  >
+                    <Ionicons name="close-circle" size={20} color="#EF4444" />
+                  </Pressable>
+                </View>
+              ))}
+              <Pressable
+                style={[styles.addPhotoBtn, { backgroundColor: isDark ? colors.background : "#F6F8FC", borderColor: colors.border }]}
+                onPress={handleAddPhoto}
+                disabled={uploadingPhoto}
+              >
+                {uploadingPhoto ? (
+                  <ActivityIndicator size="small" color={Colors.primary} />
+                ) : (
+                  <>
+                    <Ionicons name="image-outline" size={24} color={Colors.primary} />
+                    <Text style={[styles.addPhotoBtnText, { color: Colors.primary }]}>Add Photo</Text>
+                  </>
+                )}
+              </Pressable>
+            </View>
+          </View>
+
+ADD STYLES:
+  photoGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+  photoThumbnail: {
+    width: "30%",
+    height: 100,
+    borderRadius: 10,
+    position: "relative",
+  },
+  removePhotoBtn: {
+    position: "absolute",
+    top: -8,
+    right: -8,
+    zIndex: 10,
+  },
+  addPhotoBtn: {
+    width: "30%",
+    height: 100,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderStyle: "dashed",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+  },
+  addPhotoBtnText: {
+    fontSize: 11,
+    fontFamily: "Inter_500Medium",
+  },
